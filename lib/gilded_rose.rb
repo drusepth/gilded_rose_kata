@@ -1,10 +1,7 @@
 def update_quality(items)
   items.each do |item|
-    if item.name != 'Aged Brie' && item.name != 'Backstage passes to a TAFKAL80ETC concert'
-      if item.quality > 0 && item.name != 'Sulfuras, Hand of Ragnaros'
-        item.quality -= 1
-      end
-    else
+    if item.name == 'Aged Brie' || item.name == 'Backstage passes to a TAFKAL80ETC concert'
+      # handle items that increase in quality as time goes on
       if item.quality < 50
         item.quality += 1
         if item.name == 'Backstage passes to a TAFKAL80ETC concert'
@@ -18,29 +15,50 @@ def update_quality(items)
           end
         end
       end
+    else
+      # handle items that decrease in quality as time goes on
+      if item.quality > 0 && !legendary?(item)
+        item.quality -= 1
+      end
     end
-    if item.name != 'Sulfuras, Hand of Ragnaros'
+
+    # update days in time
+    unless legendary? item
       item.sell_in -= 1
     end
+
+    # handle items that have expired
     if item.sell_in < 0
-      if item.name != "Aged Brie"
+      if item.name == "Aged Brie"
+        if item.quality < 50
+          item.quality += 1
+        end
+      else
         if item.name != 'Backstage passes to a TAFKAL80ETC concert'
           if item.quality > 0
-            if item.name != 'Sulfuras, Hand of Ragnaros'
+            unless legendary? item
               item.quality -= 1
             end
           end
         else
           item.quality = item.quality - item.quality
         end
-      else
-        if item.quality < 50
-          item.quality += 1
-        end
       end
     end
+
   end
 end
+
+def legendary?(item)
+  legendary_items = ['Sulfuras, Hand of Ragnaros']
+  legendary_items.include? item.name
+end
+
+def aged?(item)
+  aged_items = ['Backstage passes to a TAFKAL80ETC concert', 'Aged Brie']
+  aged_items.include? item.name
+end
+
 
 # DO NOT CHANGE THINGS BELOW -----------------------------------------
 
