@@ -5,20 +5,18 @@ def update_quality(items)
       if item.quality < 50
         item.quality += 1
         if item.name == 'Backstage passes to a TAFKAL80ETC concert'
-          if item.quality < 50
-            if item.sell_in < 11
-              item.quality += 1
-            end
-            if item.sell_in < 6
-              item.quality += 1
-            end
+          if item.sell_in < 11
+            item.quality += degradation_with_modification(item, 1)
+          end
+          if item.sell_in < 6
+            item.quality += degradation_with_modification(item, 1)
           end
         end
       end
     else
       # handle items that decrease in quality as time goes on
       if item.quality > 0 && !legendary?(item)
-        item.quality -= 1
+        item.quality += degradation_with_modification(item, -1)
       end
     end
 
@@ -30,20 +28,22 @@ def update_quality(items)
     # handle items that have expired
     if item.sell_in < 0
       if item.name == "Aged Brie"
-        if item.quality < 50
-          item.quality += 1
-        end
+        item.quality += degradation_with_modification(item, 1)
       else
         if item.name != 'Backstage passes to a TAFKAL80ETC concert'
           if item.quality > 0
-            unless legendary? item
-              item.quality -= 1
-            end
+            item.quality += degradation_with_modification(item, -1)
           end
         else
           item.quality = item.quality - item.quality
         end
       end
+    end
+
+    # limit item to quality boundaries unless it's a legendary item
+    unless legendary? item
+      item.quality = [item.quality, 50].min
+      item.quality = [0, item.quality].max
     end
 
   end
@@ -57,6 +57,16 @@ end
 def aged?(item)
   aged_items = ['Backstage passes to a TAFKAL80ETC concert', 'Aged Brie']
   aged_items.include? item.name
+end
+
+def conjured?(item)
+  item.name.start_with? 'Conjured'
+end
+
+def degradation_with_modification(item, amount)
+  amount *= 2 if conjured?  item
+  amount *= 0 if legendary? item
+  amount
 end
 
 
