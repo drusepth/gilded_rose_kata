@@ -1,42 +1,35 @@
 def update_quality(items)
   items.each do |item|
-    if item.name == 'Aged Brie' || item.name == 'Backstage passes to a TAFKAL80ETC concert'
+    if aged? item
       # handle items that increase in quality as time goes on
-      if item.quality < 50
-        item.quality += 1
-        if item.name == 'Backstage passes to a TAFKAL80ETC concert'
-          if item.sell_in < 11
-            item.quality += degradation_with_modification(item, 1)
-          end
-          if item.sell_in < 6
-            item.quality += degradation_with_modification(item, 1)
-          end
+      item.quality += degradation_with_modification(item, 1)
+
+      # handle backstage passes with their wonderful logic
+      if backstage_passes? item
+        if item.sell_in < 11
+          item.quality += degradation_with_modification(item, 1)
+        end
+        if item.sell_in < 6
+          item.quality += degradation_with_modification(item, 1)
         end
       end
     else
       # handle items that decrease in quality as time goes on
-      if item.quality > 0 && !legendary?(item)
-        item.quality += degradation_with_modification(item, -1)
-      end
+      item.quality += degradation_with_modification(item, -1)
     end
 
-    # update days in time
-    unless legendary? item
-      item.sell_in -= 1
-    end
+    # update days until expiration date
+    item.sell_in -= 1 unless legendary? item
 
-    # handle items that have expired
+    # handle item expiration quality updates
     if item.sell_in < 0
-      if item.name == "Aged Brie"
+      case item.name
+      when 'Aged Brie'
         item.quality += degradation_with_modification(item, 1)
+      when 'Backstage passes to a TAFKAL80ETC concert'
+        item.quality = 0
       else
-        if item.name != 'Backstage passes to a TAFKAL80ETC concert'
-          if item.quality > 0
-            item.quality += degradation_with_modification(item, -1)
-          end
-        else
-          item.quality = item.quality - item.quality
-        end
+        item.quality += degradation_with_modification(item, -1)
       end
     end
 
@@ -45,7 +38,6 @@ def update_quality(items)
       item.quality = [item.quality, 50].min
       item.quality = [0, item.quality].max
     end
-
   end
 end
 
@@ -57,6 +49,11 @@ end
 def aged?(item)
   aged_items = ['Backstage passes to a TAFKAL80ETC concert', 'Aged Brie']
   aged_items.include? item.name
+end
+
+def backstage_passes?(item)
+  passes = ['Backstage passes to a TAFKAL80ETC concert']
+  passes.include? item.name
 end
 
 def conjured?(item)
